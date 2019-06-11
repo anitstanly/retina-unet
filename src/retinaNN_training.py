@@ -49,10 +49,10 @@ def get_unet(n_ch,patch_height,patch_width):
     conv4 = Conv2D(256, (3, 3), activation='relu', padding='same',data_format='channels_first')(pool3)
     conv4 = Dropout(0.25)(conv4)
     conv4 = Conv2D(256, (3, 3), activation='relu', padding='same',data_format='channels_first')(conv4)
-    pool4 = MaxPooling2D((4, 4))(conv4)
+    pool4 = MaxPooling2D((2, 2))(conv4)
     ############
     up1 = UpSampling2D(size=(2, 2))(conv4)
-    up1 = concatenate([conv3,up1],axis=1)
+    up1 = concatenate([conv4,up1],axis=1)
     conv5 = Conv2D(128, (3, 3), activation='relu', padding='same',data_format='channels_first')(up1)
     conv5 = Dropout(0.25)(conv5)
     conv5 = Conv2D(128, (3, 3), activation='relu', padding='same',data_format='channels_first')(conv5)
