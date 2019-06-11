@@ -44,26 +44,37 @@ def get_unet(n_ch,patch_height,patch_width):
     conv3 = Conv2D(128, (3, 3), activation='relu', padding='same',data_format='channels_first')(pool2)
     conv3 = Dropout(0.25)(conv3)
     conv3 = Conv2D(128, (3, 3), activation='relu', padding='same',data_format='channels_first')(conv3)
-
-    up1 = UpSampling2D(size=(2, 2))(conv3)
-    up1 = concatenate([conv2,up1],axis=1)
-    conv4 = Conv2D(64, (3, 3), activation='relu', padding='same',data_format='channels_first')(up1)
-    conv4 = Dropout(0.25)(conv4)
-    conv4 = Conv2D(64, (3, 3), activation='relu', padding='same',data_format='channels_first')(conv4)
-    #
-    up2 = UpSampling2D(size=(2, 2))(conv4)
-    up2 = concatenate([conv1,up2], axis=1)
-    conv5 = Conv2D(32, (3, 3), activation='relu', padding='same',data_format='channels_first')(up2)
-    conv5 = Dropout(0.25)(conv5)
-    conv5 = Conv2D(32, (3, 3), activation='relu', padding='same',data_format='channels_first')(conv5)
-    #
-    conv6 = Conv2D(2, (1, 1), activation='relu',padding='same',data_format='channels_first')(conv5)
-    conv6 = core.Reshape((2,patch_height*patch_width))(conv6)
-    conv6 = core.Permute((2,1))(conv6)
+    pool3 = MaxPooling2D((2, 2))(conv3) 
     ############
-    conv7 = core.Activation('softmax')(conv6)
+    conv4 = Conv2D(256, (3, 3), activation='relu', padding='same',data_format='channels_first')(pool3)
+    conv4 = Dropout(0.25)(conv4)
+    conv4 = Conv2D(256, (3, 3), activation='relu', padding='same',data_format='channels_first')(conv4)
+    ############
+    up1 = UpSampling2D(size=(2, 2))(conv4)
+    up1 = concatenate([conv3,up1],axis=1)
+    conv4 = Conv2D(128, (3, 3), activation='relu', padding='same',data_format='channels_first')(up1)
+    conv4 = Dropout(0.25)(conv4)
+    conv4 = Conv2D(128, (3, 3), activation='relu', padding='same',data_format='channels_first')(conv4)
+    ############
+    up2 = UpSampling2D(size=(2, 2))(conv4)
+    up2 = concatenate([conv2,up2],axis=1)
+    conv5 = Conv2D(64, (3, 3), activation='relu', padding='same',data_format='channels_first')(up2)
+    conv5 = Dropout(0.25)(conv5)
+    conv5 = Conv2D(64, (3, 3), activation='relu', padding='same',data_format='channels_first')(conv5)
+    #
+    up3 = UpSampling2D(size=(2, 2))(conv5)
+    up3 = concatenate([conv1,up3], axis=1)
+    conv6 = Conv2D(32, (3, 3), activation='relu', padding='same',data_format='channels_first')(up3)
+    conv6 = Dropout(0.25)(conv6)
+    conv6 = Conv2D(32, (3, 3), activation='relu', padding='same',data_format='channels_first')(conv6)
+    #
+    conv7 = Conv2D(2, (1, 1), activation='relu',padding='same',data_format='channels_first')(conv6)
+    conv7 = core.Reshape((2,patch_height*patch_width))(conv7)
+    conv7 = core.Permute((2,1))(conv7)
+    ############
+    conv8 = core.Activation('softmax')(conv7)
 
-    model = Model(inputs=inputs, outputs=conv7)
+    model = Model(inputs=inputs, outputs=conv8)
 
     # sgd = SGD(lr=0.01, decay=1e-6, momentum=0.3, nesterov=False)
     model.compile(optimizer='sgd', loss='categorical_crossentropy',metrics=['accuracy'])
@@ -165,7 +176,7 @@ visualize(group_images(patches_masks_train[0:N_sample,:,:,:],5),'./'+name_experi
 n_ch = patches_imgs_train.shape[1]
 patch_height = patches_imgs_train.shape[2]
 patch_width = patches_imgs_train.shape[3]
-model = get_gnet(n_ch, patch_height, patch_width)  #the U-net model
+model = get_unet(n_ch, patch_height, patch_width)  #the U-net model
 print "Check: final output of the network:"
 print model.output_shape
 plot(model, to_file='./'+name_experiment+'/'+name_experiment + '_model.png')   #check how the model looks like
