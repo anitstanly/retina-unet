@@ -44,41 +44,29 @@ def get_unet(n_ch,patch_height,patch_width):
     conv3 = Conv2D(128, (3, 3), activation='relu', padding='same',data_format='channels_first')(pool2)
     conv3 = Dropout(0.25)(conv3)
     conv3 = Conv2D(128, (3, 3), activation='relu', padding='same',data_format='channels_first')(conv3)
-    pool3 = MaxPooling2D((2, 2))(conv3) 
-    ############
-    conv4 = Conv2D(256, (3, 3), activation='relu', padding='same',data_format='channels_first')(pool3)
-    conv4 = Dropout(0.25)(conv4)
-    conv4 = Conv2D(256, (3, 3), activation='relu', padding='same',data_format='channels_first')(conv4)
-    pool4 = MaxPooling2D((2, 2))(conv4)
-    ############
-    up1 = UpSampling2D(size=(2, 2))(conv4)
-    up1 = concatenate([conv4,up1],axis=1)
-    conv5 = Conv2D(128, (3, 3), activation='relu', padding='same',data_format='channels_first')(up1)
-    conv5 = Dropout(0.25)(conv5)
-    conv5 = Conv2D(128, (3, 3), activation='relu', padding='same',data_format='channels_first')(conv5)
-    ############
-    up2 = UpSampling2D(size=(2, 2))(conv5)
-    up2 = concatenate([conv2,up2],axis=1)
-    conv6 = Conv2D(64, (3, 3), activation='relu', padding='same',data_format='channels_first')(up2)
-    conv6 = Dropout(0.25)(conv6)
-    conv6 = Conv2D(64, (3, 3), activation='relu', padding='same',data_format='channels_first')(conv6)
-    #
-    up3 = UpSampling2D(size=(2, 2))(conv6)
-    up3 = concatenate([conv1,up3], axis=1)
-    conv7 = Conv2D(32, (3, 3), activation='relu', padding='same',data_format='channels_first')(up3)
-    conv7 = Dropout(0.25)(conv7)
-    conv7 = Conv2D(32, (3, 3), activation='relu', padding='same',data_format='channels_first')(conv7)
-    #
-    conv8 = Conv2D(2, (1, 1), activation='relu',padding='same',data_format='channels_first')(conv7)
-    conv8 = core.Reshape((2,patch_height*patch_width))(conv8)
-    conv8 = core.Permute((2,1))(conv8)
-    ############
-    conv9 = core.Activation('softmax')(conv8)
 
-    model = Model(inputs=inputs, outputs=conv9)
+    up1 = UpSampling2D(size=(2, 2))(conv3)
+    up1 = concatenate([conv2,up1],axis=1)
+    conv4 = Conv2D(64, (3, 3), activation='relu', padding='same',data_format='channels_first')(up1)
+    conv4 = Dropout(0.25)(conv4)
+    conv4 = Conv2D(64, (3, 3), activation='relu', padding='same',data_format='channels_first')(conv4)
+    #
+    up2 = UpSampling2D(size=(2, 2))(conv4)
+    up2 = concatenate([conv1,up2], axis=1)
+    conv5 = Conv2D(32, (3, 3), activation='relu', padding='same',data_format='channels_first')(up2)
+    conv5 = Dropout(0.25)(conv5)
+    conv5 = Conv2D(32, (3, 3), activation='relu', padding='same',data_format='channels_first')(conv5)
+    #
+    conv6 = Conv2D(2, (1, 1), activation='relu',padding='same',data_format='channels_first')(conv5)
+    conv6 = core.Reshape((2,patch_height*patch_width))(conv6)
+    conv6 = core.Permute((2,1))(conv6)
+    ############
+    conv7 = core.Activation('softmax')(conv6)
+
+    model = Model(inputs=inputs, outputs=conv7)
 
     # sgd = SGD(lr=0.01, decay=1e-6, momentum=0.3, nesterov=False)
-    model.compile(optimizer='sgd', loss='categorical_crossentropy',metrics=['accuracy'])
+    model.compile(optimizer='sgd', loss='binary_crossentropy',metrics=['accuracy'])
 
     return model
 
